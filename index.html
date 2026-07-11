@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>荣耀</title>
+    <!-- 引入 FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* ----- 主模态框 ----- */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.25);
+            backdrop-filter: blur(2px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+        }
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .modal-box {
+            background: #ffffff;
+            border-radius: 32px;
+            padding: 2.2rem 2.8rem;
+            max-width: 480px;
+            width: 85%;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            text-align: left;          /* 整体左对齐 */
+            transform: scale(0.96);
+            transition: transform 0.2s ease;
+            border: none;
+        }
+        .modal-overlay.active .modal-box {
+            transform: scale(1);
+        }
+        .modal-title {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: #000000;
+            margin: 0 0 0.5rem 0;
+            letter-spacing: 0.02em;
+            text-align: left;
+        }
+        .modal-sub {
+            font-size: 2.0rem;
+            font-weight: 600;
+            color: #5CC5FF;
+            margin: 0.25rem 0 0.75rem 0;
+            letter-spacing: 0.02em;
+            text-align: left;
+        }
+        .modal-link {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: #000000;
+            text-decoration: none;
+            display: inline-block;
+            margin-top: 0.75rem;
+            border-bottom: 2px solid transparent;
+            transition: border-color 0.15s;
+            cursor: pointer;
+            text-align: left;
+        }
+        .modal-link:hover {
+            border-bottom-color: #000000;
+        }
+        .modal-close {
+            margin-top: 1.5rem;
+            font-size: 1.1rem;
+            color: #999;
+            cursor: pointer;
+            display: inline-block;
+            padding: 0.3rem 1.2rem;
+            border-radius: 30px;
+            border: 1px solid #ddd;
+            transition: 0.15s;
+            background: #fafafa;
+            text-align: left;
+        }
+        .modal-close:hover {
+            background: #f0f0f0;
+            border-color: #aaa;
+        }
+        @media (max-width: 480px) {
+            .modal-box { padding: 1.8rem 1.5rem; }
+            .modal-title { font-size: 1.4rem; }
+            .modal-sub { font-size: 1.6rem; }
+            .modal-link { font-size: 1.4rem; }
+        }
+
+        /* ----- iframe 模态框 ----- */
+        .iframe-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.45);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease;
+        }
+        .iframe-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .iframe-box {
+            background: #ffffff;
+            border-radius: 32px;
+            overflow: hidden;
+            width: 92%;
+            max-width: 1100px;
+            height: 85vh;
+            max-height: 800px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.3);
+            transform: scale(0.95);
+            transition: transform 0.25s ease;
+            display: flex;
+            flex-direction: column;
+        }
+        .iframe-overlay.active .iframe-box {
+            transform: scale(1);
+        }
+        .iframe-header {
+            display: flex;
+            justify-content: flex-end;
+            padding: 0.6rem 1.2rem;
+            background: #f8f8f8;
+            border-bottom: 1px solid #eee;
+            flex-shrink: 0;
+        }
+        .iframe-close-btn {
+            background: none;
+            border: none;
+            font-size: 1.6rem;
+            cursor: pointer;
+            color: #666;
+            padding: 0.2rem 0.6rem;
+            border-radius: 30px;
+            transition: 0.15s;
+            line-height: 1;
+        }
+        .iframe-close-btn:hover {
+            background: #eee;
+            color: #000;
+        }
+        .iframe-box iframe {
+            flex: 1;
+            width: 100%;
+            border: none;
+            background: #ffffff;
+        }
+        @media (max-width: 600px) {
+            .iframe-box {
+                width: 96%;
+                height: 90vh;
+                max-height: none;
+                border-radius: 24px;
+            }
+        }
+
+        /* ----- 其他页面元素 ----- */
+        .image-frame {
+            border-radius: 32px;
+            overflow: hidden;
+            width: 90%;
+            max-width: 700px;
+            margin: 0.5rem auto 0.2rem auto;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+            background: #f5f7fa;
+            pointer-events: none;
+        }
+        .image-frame img {
+            display: block;
+            width: 100%;
+            height: auto;
+            aspect-ratio: 16 / 9;
+            object-fit: cover;
+            background: #eaeef3;
+            border: none;
+        }
+        .daily-quote {
+            color: #5CC5FF;
+            font-size: 1.5rem;
+            font-weight: 500;
+            letter-spacing: 0.04em;
+            text-align: center;
+            margin: 1.2rem 0 0.2rem 0;
+            padding: 0 1rem;
+            line-height: 1.4;
+        }
+        @media (max-width: 480px) {
+            .daily-quote { font-size: 1.2rem; }
+        }
+        .bottom-line {
+            width: 70%;
+            max-width: 600px;
+            height: 3px;
+            background-color: #000000;
+            border-radius: 2px;
+            margin: 1rem auto 0.6rem auto;
+            flex-shrink: 0;
+        }
+        .bottom-text {
+            color: #888888;
+            font-size: 1.3rem;
+            font-weight: 400;
+            letter-spacing: 0.06em;
+            text-align: center;
+            margin: 0.2rem 0 1rem 0;
+            padding: 0 1rem;
+            line-height: 1.5;
+        }
+        @media (max-width: 480px) {
+            .bottom-text { font-size: 1.0rem; }
+        }
+
+        /* ----- 竖向并排的两个服务按钮 (等宽，左对齐) ----- */
+        .service-btn {
+            border-radius: 32px !important;
+            cursor: pointer;
+            transition: all 0.1s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            background: #ffffff;
+            padding: 0.8rem 1.8rem;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+            width: 100%;              /* 等宽 */
+            justify-content: flex-start;
+            text-align: left;
+            box-sizing: border-box;
+        }
+        .service-btn .btn-icon {
+            font-size: 1.6rem;
+            width: 1.6rem;
+            text-align: center;
+            flex-shrink: 0;
+        }
+        .service-btn .btn-text {
+            font-size: 1.2rem;
+            font-weight: 500;
+            letter-spacing: 0.03em;
+            white-space: nowrap;
+        }
+        .service-vertical {
+            display: flex;
+            flex-direction: column;
+            align-items: center;       /* 容器居中 */
+            gap: 1rem;
+            margin-top: 2rem;
+            padding: 0 1rem;
+            width: 100%;
+            max-width: 400px;
+            box-sizing: border-box;
+        }
+        @media (max-width: 480px) {
+            .service-btn .btn-text { font-size: 1.0rem; }
+            .service-btn { padding: 0.6rem 1.2rem; }
+        }
+    </style>
+</head>
+<body style="margin:0; padding:0; background:#ffffff; min-height:100vh; display:flex; flex-direction:column; align-items:center; font-family:system-ui, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;">
+
+    <!-- 顶部图片 -->
+    <div style="width:100%; display:flex; justify-content:center; margin-top:0.5rem; padding:0 1rem; box-sizing:border-box;">
+        <img src="/head.png" alt="head" style="max-width:100%; height:auto; display:block; object-fit:contain; max-height:120px;">
+    </div>
+
+    <!-- 主计时区域 -->
+    <div style="display:flex; flex-direction:column; align-items:center; width:100%; margin-top:0.25rem; padding:0 1rem; box-sizing:border-box;">
+        <div style="color: #5CC5FF; font-size: clamp(5rem, 20vw, 12rem); font-weight:700; letter-spacing:0.02em; text-align:center; line-height:1.2; word-break:break-word;">
+            <span id="timeDisplay">加载中…</span>
+        </div>
+        <div style="width: 70%; max-width: 600px; height: 3px; background-color: #000000; margin-top: 0.5rem; border-radius: 2px; flex-shrink:0;"></div>
+    </div>
+
+    <!-- 两个服务按钮：竖向并排，等宽，左对齐 -->
+    <div class="service-vertical">
+        <div id="btnExpress" class="service-btn" style="border:1.5px solid #5CC5FF;">
+            <i class="fas fa-exchange-alt btn-icon" style="color:#5CC5FF;"></i>
+            <span class="btn-text" style="color:#000000;">双向寄修免物流费</span>
+        </div>
+        <div id="btnWarranty" class="service-btn" style="border:1.5px solid #cccccc;">
+            <i class="fas fa-shield-alt btn-icon" style="color:#888888;"></i>
+            <span class="btn-text" style="color:#888888;">三包服务</span>
+        </div>
+    </div>
+
+    <!-- 每日一言 -->
+    <div class="daily-quote">
+        <span style="color:#5CC5FF;">每一天</span>有每一天的风景
+    </div>
+
+    <!-- 图片框 -->
+    <div class="image-frame">
+        <img src="https://bing.biturl.top/?resolution=1920&format=image&index=0&mkt=zh-CN" 
+             alt="Bing每日一图" 
+             loading="lazy">
+    </div>
+
+    <!-- 底部横线 -->
+    <div class="bottom-line"></div>
+    <div class="bottom-text">愿你每一天，皆是荣耀</div>
+
+    <!-- ===== 主模态框 ===== -->
+    <div id="modalOverlay" class="modal-overlay">
+        <div class="modal-box">
+            <div id="modalContent">
+                <!-- 动态渲染 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== iframe 模态框 (荣耀官网) ===== -->
+    <div id="iframeOverlay" class="iframe-overlay">
+        <div class="iframe-box">
+            <div class="iframe-header">
+                <button class="iframe-close-btn" id="iframeCloseBtn">✕</button>
+            </div>
+            <iframe src="https://www.honor.com" title="荣耀官网"></iframe>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            "use strict";
+
+            // ----- 计时器 -----
+            const TARGET = new Date(2022, 2, 14, 14, 0, 0, 0);
+            const displayEl = document.getElementById('timeDisplay');
+
+            function computeDeltaHTML() {
+                const now = new Date();
+                let diffMs = now.getTime() - TARGET.getTime();
+                let sign = '';
+                if (diffMs < 0) { sign = '-'; diffMs = Math.abs(diffMs); }
+                const totalSeconds = Math.floor(diffMs / 1000);
+                const days = Math.floor(totalSeconds / 86400);
+                const dayNum = sign + days;
+                return `<span style="font-weight:700;">${dayNum}</span><span style="font-size:0.6em; font-weight:400; margin-left:0.05em; display:inline-block;">天</span>`;
+            }
+
+            function updateDisplay() {
+                if (displayEl) {
+                    displayEl.innerHTML = computeDeltaHTML();
+                }
+            }
+            updateDisplay();
+            setInterval(updateDisplay, 16);
+            window.addEventListener('load', updateDisplay);
+
+            // ----- 主模态框控制 -----
+            const overlay = document.getElementById('modalOverlay');
+            const content = document.getElementById('modalContent');
+
+            function openIframeModal() {
+                document.getElementById('iframeOverlay').classList.add('active');
+            }
+
+            function closeIframeModal() {
+                document.getElementById('iframeOverlay').classList.remove('active');
+            }
+
+            function openModal(type) {
+                let html = '';
+                if (type === 'warranty') {
+                    html = `
+                        <div class="modal-title">三包服务</div>
+                        <div class="modal-sub">2023.3.14到期</div>
+                        <div class="modal-link" id="openIframeBtn">点击访问荣耀官网</div>
+                        <div class="modal-close" id="modalCloseBtn">关闭</div>
+                    `;
+                } else if (type === 'express') {
+                    html = `
+                        <div class="modal-title">双向寄修免物流费</div>
+                        <div class="modal-sub">永久有效</div>
+                        <div style="height:0.5rem;"></div>
+                        <div class="modal-close" id="modalCloseBtn">关闭</div>
+                    `;
+                } else {
+                    return;
+                }
+                content.innerHTML = html;
+                overlay.classList.add('active');
+
+                const closeBtn = document.getElementById('modalCloseBtn');
+                if (closeBtn) {
+                    closeBtn.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        overlay.classList.remove('active');
+                    });
+                }
+
+                const iframeBtn = document.getElementById('openIframeBtn');
+                if (iframeBtn) {
+                    iframeBtn.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        openIframeModal();
+                        overlay.classList.remove('active');
+                    });
+                }
+
+                overlay.addEventListener('click', function(e) {
+                    if (e.target === overlay) {
+                        overlay.classList.remove('active');
+                    }
+                });
+
+                const box = document.querySelector('.modal-box');
+                if (box) {
+                    box.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                    });
+                }
+            }
+
+            document.getElementById('btnWarranty')?.addEventListener('click', () => openModal('warranty'));
+            document.getElementById('btnExpress')?.addEventListener('click', () => openModal('express'));
+
+            overlay.addEventListener('click', function(e) {
+                if (e.target === overlay) {
+                    overlay.classList.remove('active');
+                }
+            });
+
+            // ----- iframe 模态框控制 -----
+            const iframeOverlay = document.getElementById('iframeOverlay');
+            const iframeCloseBtn = document.getElementById('iframeCloseBtn');
+
+            iframeCloseBtn.addEventListener('click', closeIframeModal);
+            iframeOverlay.addEventListener('click', function(e) {
+                if (e.target === iframeOverlay) {
+                    closeIframeModal();
+                }
+            });
+
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    if (iframeOverlay.classList.contains('active')) {
+                        closeIframeModal();
+                    }
+                    if (overlay.classList.contains('active')) {
+                        overlay.classList.remove('active');
+                    }
+                }
+            });
+
+            // ----- 图片容错 -----
+            const img = document.querySelector('.image-frame img');
+            if (img) {
+                img.addEventListener('error', function() {
+                    this.style.opacity = '0.6';
+                });
+            }
+
+        })();
+    </script>
+</body>
+</html>
